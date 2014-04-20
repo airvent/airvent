@@ -1,5 +1,6 @@
 /* vim: set foldmethod=syntax : */
 #include "configure.h"
+#include "ventd.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,14 +13,11 @@
 #include <argp.h>
 #include <assert.h>
 
-typedef enum {
-  false=0,
-  true=-1
-} bool;
-
 #define PROG_NAME "airvent"
 
+
 char *instance_name=PROG_NAME;
+char *pipe_path;
 bool ctrl_stdin = false;
 
 static int parse_opt (int key, char *arg, struct argp_state *state) {
@@ -70,7 +68,7 @@ char * readcmd(int fd, size_t len, char separator) {
 
 void term() {
   syslog(LOG_NOTICE, "instance stopping: %s", instance_name);
-  unlink(instance_name);
+  unlink(pipe_path);
   closelog();
 }
 
@@ -98,7 +96,7 @@ int main (int argc, char **argv) {
   syslog (LOG_NOTICE, "instance started: %s", instance_name);
 
   // Create control fifo
-  char *pipe_path = malloc(sizeof(PIPE_PATH)+strlen(instance_name)+1);
+  pipe_path = malloc(sizeof(PIPE_PATH)+strlen(instance_name)+1);
   sprintf(pipe_path, PIPE_PATH "%s", instance_name); 
 
   struct stat st;
@@ -113,11 +111,7 @@ int main (int argc, char **argv) {
   int ctrl_fd = open(pipe_path, O_RDONLY | O_NDELAY);
   free(pipe_path);
   assert(ctrl_fd);
-
-  // Wait for commands on the control fifo
-  while(1) {
-    char *cmd = readcmd(ctrl_fd, 255, '\n');
-    printf("cmd: %s\n", cmd);
-    free(cmd);
-  }
+  return command_loop(ctrl_fd);
 }
+
+

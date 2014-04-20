@@ -1,6 +1,6 @@
 include_directories(${airvent_SOURCE_DIR}/include)
 
-add_executable(ventd ventd.c)
+add_executable(ventd ventd.c commands.c)
 find_package (argp REQUIRED)
 
 if (ARGP_FOUND)
