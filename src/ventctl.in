@@ -1,0 +1,30 @@
+#!/bin/sh
+# vim: ft=bash :
+
+INSTANCE="airvent"
+
+usage() {
+  echo "usage: $(basename $0) [-i INSTANCE] commands" 
+}
+
+while getopts ":i:" opt; do
+  case $opt in
+    i)
+      INSTANCE="airvent.$OPTARG" 
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      ;;
+  esac
+done
+
+PIPE=@PIPE_DIR@$INSTANCE
+
+if [[ ! -p $PIPE ]]; then
+  echo "pipe not found" 1>&2
+  exit 1
+fi
+
+shift $((OPTIND-1))
+
+echo $@ > $PIPE
