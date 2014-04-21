@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <dlfcn.h>
 #include <argp.h>
+#include <string.h>
 
 struct spawn_arguments {
   char *entry;
@@ -22,6 +23,7 @@ int spawn_option_parse(int key, char *arg, struct argp_state *state) {
       break;
 
     case ARGP_KEY_ARG:
+      /* Make sure that argv is large enough to hold the arguments */
       if (!arguments->argv)
         arguments->argv = malloc((state->arg_num+1)*sizeof( char* ));
       else
@@ -63,9 +65,16 @@ command(spawn) {
 
   static struct argp argp = { options, spawn_option_parse, 0, 0 }; 
   if (argp_parse (&argp, argc+1, argv, ARGP_SILENT | ARGP_NO_ERRS, 0, &arguments)) {
+    /*
+     * If arguments couldn't be parsed, revert to defaults:
+     *   arguments.argc = argc-1
+     *   arguments.argv = argv[1:argc]
+     *   arguments.entry = entry="main"
+     */
     syslog(LOG_WARNING, "could not parse options, using defaults");
     arguments.argc = argc-1;
-    arguments.argv = &(argv[1]);
+    arguments.argv = malloc(argc*sizeof( char* ));
+    arguments.argv = memcpy(arguments.argv, &(argv[1]), argc*sizeof( char* ));
   }
   char *object = arguments.argv[0];
 
@@ -89,9 +98,11 @@ command(spawn) {
         }
         else if (pid<0)
           syslog(LOG_ERR, "could not fork %s", object);
-        else
+        else {
           printf("forked %s as pid %d\n", object, pid);
           syslog(LOG_NOTICE, "forked %s as pid %d", object, pid);
+        }
+        free(arguments.argv);
       }
   }
 }
