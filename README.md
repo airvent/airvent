@@ -32,10 +32,10 @@ A plugin can be forked off using the spawn command:
 
 - Syntax:
 
-    ventctl spawn <plugin> [-eENTRY | --entry=ENTRY] [[arguments]]
+        ventctl spawn <plugin> [-eENTRY | --entry=ENTRY] [[arguments]]
 
 - Example:
 
-    ventctl spawn ./plugins/hello.so 
+        ventctl spawn ./plugins/hello.so 
 
 
