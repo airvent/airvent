@@ -76,8 +76,9 @@ command(spawn) {
     arguments.argv = malloc(argc*sizeof( char* ));
     arguments.argv = memcpy(arguments.argv, &(argv[1]), argc*sizeof( char* ));
   }
-  char *object = arguments.argv[0];
 
+  /* Open the object */
+  char *object = arguments.argv[0];
   void *plugin = dlopen(object, RTLD_LAZY);
   if (!plugin)
     syslog(LOG_ERR, "Unable to load \'%s\'", object);
@@ -88,17 +89,20 @@ command(spawn) {
       } else {
         int (*plugin_main)(int argc, char **argv);
         plugin_main = (int (*)(int argc, char **argv)) initializer;
+
+        /* fork off a process to run the plugin */
         signal(SIGCHLD, sig_chld);
         pid_t pid = fork();
         if (pid==0){ 
+          /* in child process */
           plugin_main(arguments.argc, arguments.argv);
           // C99 exit here without calling the atexit handler
-          syslog(LOG_NOTICE, "terminated.");
           _Exit(0); 
         }
         else if (pid<0)
           syslog(LOG_ERR, "could not fork %s", object);
         else {
+          /* in parent process */
           printf("forked %s as pid %d\n", object, pid);
           syslog(LOG_NOTICE, "forked %s as pid %d", object, pid);
         }
