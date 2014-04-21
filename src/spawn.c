@@ -1,4 +1,5 @@
 #include "commands.h"
+#include "spawn.h"
 #include <stdio.h>
 #include <syslog.h>
 #include <unistd.h>
@@ -6,7 +7,54 @@
 #include <signal.h>
 #include <dlfcn.h>
 #include <argp.h>
+#include <assert.h>
 #include <string.h>
+
+children_t processes;
+
+void print_children(children_t *list) {
+  printf("%p=[", list);
+  for (int i = 0; i < list->count; i++) {
+    printf(" %d", list->children[i].pid);
+  }
+  printf(" ]\n");
+}
+
+void insert_child(children_t *list, child_t child) {
+  if(!list->children) {
+    assert(list->count == 0);
+    list->children = malloc(sizeof(child_t));
+  } else
+    list->children = realloc(list->children, (list->count+1)*sizeof(child_t));
+  list->children[list->count] = child;
+  list->count++;
+}
+
+// Comparator to sort list by pid
+int child_compare( void const * lhs, void const * rhs ) {
+  pid_t left  = ((child_t *) lhs)->pid;
+  pid_t right = ((child_t *) rhs)->pid;
+
+  if( left < right ) return -1;
+  if( left > right ) return  1;
+
+  return 0;  /* left == right */
+}
+
+void remove_child(children_t *list, pid_t pid) {
+  qsort(list->children, list->count, sizeof(child_t), child_compare );
+  child_t key;
+  key.pid=pid;
+  child_t *child = bsearch(&key, list->children, list->count, sizeof(child_t), child_compare);
+  memset(child, 0, sizeof(child_t));
+  qsort(list->children, list->count, sizeof(child_t), child_compare );
+
+  list->count--;
+  child_t *new_list = malloc( sizeof(child_t)*(list->count) );
+  new_list = memcpy(new_list, &(list->children[1]), sizeof(child_t)*(list->count) );
+  free(list->children);
+  list->children = new_list;
+}
 
 struct spawn_arguments {
   char *entry;
@@ -48,6 +96,7 @@ void sig_chld(int signo) {
   }
   if (WIFEXITED(status)) {
     child_val = WEXITSTATUS(status); /* get child's exit status */
+    remove_child(&processes, pid);
     syslog(LOG_NOTICE, "%d exited and returned %d\n", pid, child_val);
   }
 }
@@ -102,6 +151,12 @@ command(spawn) {
         else if (pid<0)
           syslog(LOG_ERR, "could not fork %s", object);
         else {
+          child_t process;
+          process.pid=pid;
+          process.argc=arguments.argc;
+          process.argv=arguments.argv;
+          insert_child(&processes, process);
+
           /* in parent process */
           printf("forked %s as pid %d\n", object, pid);
           syslog(LOG_NOTICE, "forked %s as pid %d", object, pid);
