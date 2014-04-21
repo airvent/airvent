@@ -101,6 +101,30 @@ void sig_chld(int signo) {
   }
 }
 
+pid_t fork_process(int (*entry)(int argc, char **argv), int argc, char **argv, children_t list) {
+  /* fork off a process to run the plugin */
+  signal(SIGCHLD, sig_chld);
+  pid_t pid = fork();
+  if (pid==0){
+    /* in child process */
+    entry(argc,argv);
+    // C99 exit here without calling the atexit handler
+    _Exit(0);
+  }
+  else if (pid<0)
+    syslog(LOG_ERR, "could not fork %s", argv[0]);
+  else {
+    /* in parent process */
+    child_t process;
+    process.pid=pid;
+    process.argc=argc;
+    process.argv=argv;
+    insert_child(&processes, process);
+    syslog(LOG_NOTICE, "forked %s as pid %d", argv[0], pid);
+  }
+  return pid;
+}
+
 command(spawn) {
   /* Option Parsing */
   struct spawn_arguments arguments;
@@ -136,31 +160,11 @@ command(spawn) {
     if (initializer == NULL) {
       syslog(LOG_ERR, "Unable to extract initializer \'%s\' from \'%s\'", arguments.entry, object);
       } else {
-        int (*plugin_main)(int argc, char **argv);
-        plugin_main = (int (*)(int argc, char **argv)) initializer;
+        int (*plugin_main)(int argc, char **argv) = (int (*)(int argc, char **argv)) initializer;
 
         /* fork off a process to run the plugin */
-        signal(SIGCHLD, sig_chld);
-        pid_t pid = fork();
-        if (pid==0){ 
-          /* in child process */
-          plugin_main(arguments.argc, arguments.argv);
-          // C99 exit here without calling the atexit handler
-          _Exit(0); 
-        }
-        else if (pid<0)
-          syslog(LOG_ERR, "could not fork %s", object);
-        else {
-          child_t process;
-          process.pid=pid;
-          process.argc=arguments.argc;
-          process.argv=arguments.argv;
-          insert_child(&processes, process);
+        fork_process(plugin_main, argc, argv, processes);
 
-          /* in parent process */
-          printf("forked %s as pid %d\n", object, pid);
-          syslog(LOG_NOTICE, "forked %s as pid %d", object, pid);
-        }
         free(arguments.argv);
       }
   }
