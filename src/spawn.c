@@ -101,17 +101,42 @@ void sig_chld(int signo) {
   }
   if (WIFEXITED(status)) {
     child_val = WEXITSTATUS(status); /* get child's exit status */
+    child_t *process = lookup_child(&processes, pid);
+    close(process->in);
+    close(process->out);
+    close(process->err);
     remove_child(&processes, pid);
     syslog(LOG_NOTICE, "%d exited and returned %d\n", pid, child_val);
   }
 }
 
+#define READ 0
+#define WRITE 1
+
 pid_t fork_process(int (*entry)(int argc, char **argv), int argc, char **argv, children_t list) {
-  /* fork off a process to run the plugin */
+  /* Setup signal handler for when the child exits */
   signal(SIGCHLD, sig_chld);
+
+  /* Create pipes */
+  int in[2], out[2], err[2];
+  pipe(in);
+  pipe(out);
+  pipe(err);
+
+  /* Fork */
   pid_t pid = fork();
   if (pid==0){
     /* in child process */
+
+    /* setup pipes */
+    close(out[READ]);
+    close(err[READ]);
+    close(in[WRITE]);
+
+    dup2(out[WRITE], STDOUT_FILENO);
+    dup2(err[WRITE], STDIN_FILENO);
+    dup2(in[READ], STDERR_FILENO);
+
     entry(argc,argv);
     // C99 exit here without calling the atexit handler
     _Exit(0);
@@ -120,11 +145,22 @@ pid_t fork_process(int (*entry)(int argc, char **argv), int argc, char **argv, c
     syslog(LOG_ERR, "could not fork %s", argv[0]);
   else {
     /* in parent process */
+
+    /* setup pipes */
+    close(out[WRITE]);
+    close(err[WRITE]);
+    close(in[READ]);
+
+    /* Add child process to list */
     child_t process;
     process.pid=pid;
     process.argc=argc;
     process.argv=argv;
+    process.out=out[READ];
+    process.err=err[READ];
+    process.in=in[WRITE];
     insert_child(&processes, process);
+
     syslog(LOG_NOTICE, "forked %s as pid %d", argv[0], pid);
   }
   return pid;
