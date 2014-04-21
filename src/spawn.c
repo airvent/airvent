@@ -41,11 +41,16 @@ int child_compare( void const * lhs, void const * rhs ) {
   return 0;  /* left == right */
 }
 
-void remove_child(children_t *list, pid_t pid) {
-  qsort(list->children, list->count, sizeof(child_t), child_compare );
+child_t* lookup_child(children_t *list, pid_t pid) {
+  qsort(list->children, list->count, sizeof(child_t), child_compare);
   child_t key;
   key.pid=pid;
   child_t *child = bsearch(&key, list->children, list->count, sizeof(child_t), child_compare);
+  return child;
+}
+
+void remove_child(children_t *list, pid_t pid) {
+  child_t *child = lookup_child(list, pid);
   memset(child, 0, sizeof(child_t));
   qsort(list->children, list->count, sizeof(child_t), child_compare );
 
