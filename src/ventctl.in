@@ -20,7 +20,7 @@ done
 
 PIPE=@PIPE_DIR@$INSTANCE
 
-if [[ ! -p $PIPE ]]; then
+if [ ! -p $PIPE ]; then
   echo "pipe not found" 1>&2
   exit 1
 fi
