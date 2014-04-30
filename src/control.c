@@ -112,7 +112,7 @@ int command_loop( int ctrl_fd ) {
   // Wait for commands on the control fifo
   while(1) {
     char *cmd = readcmd(ctrl_fd, 255, '\n');
-    execute(cmd);
+    if(strlen(cmd)) execute(cmd);
     free(cmd);
   }
 }
