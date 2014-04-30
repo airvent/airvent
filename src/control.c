@@ -1,8 +1,12 @@
+#define _POSIX_C_SOURCE 200809L
+#define _XOPEN_SOURCE 700
+
 #include "ventd.h"
 #include "commands.h"
 #include "configure.h"
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 
 // comparator function
 int stringcase_cmp(const void *lhs, const void *rhs ) {

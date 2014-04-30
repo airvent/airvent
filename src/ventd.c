@@ -1,4 +1,8 @@
 /* vim: set foldmethod=syntax : */
+
+#define _POSIX_C_SORCE 200809L
+#define _XOPEN_SOURCE 700
+
 #include "configure.h"
 #include "ventd.h"
 #include <stdio.h>
@@ -73,7 +77,7 @@ void term() {
 }
 
 static void signal_handler(int sig) {
-  printf("received signal: %s\n", sys_signame[sig]);
+  printf("received signal: %s\n", strsignal(sig));
   switch(sig) {
   case SIGTERM:
   case SIGINT: 

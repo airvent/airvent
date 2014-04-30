@@ -8,6 +8,7 @@ if (ARGP_FOUND)
   target_link_libraries (ventd ${ARGP_LIBRARIES})
 endif(ARGP_FOUND)
 
+target_link_libraries (ventd dl)
 
 configure_file ("ventctl.in" "${PROJECT_BINARY_DIR}/ventctl")
 configure_file ("configure.h.in" "${PROJECT_BINARY_DIR}/configure.h")

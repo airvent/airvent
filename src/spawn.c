@@ -1,9 +1,13 @@
+#define _POSIX_C_SOURCE 200809L
+#define _XOPEN_SOURCE 700
+
 #include "commands.h"
 #include "spawn.h"
 #include <stdio.h>
 #include <syslog.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <signal.h>
 #include <dlfcn.h>
 #include <argp.h>
