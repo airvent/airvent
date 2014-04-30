@@ -16,7 +16,6 @@ int stringcase_cmp(const void *lhs, const void *rhs ) {
   );
 }
 
-
 void (*string_switch( char* token, stringcase_t *cases, size_t case_count ))(int argc, char **argv) {
   qsort(cases, case_count, sizeof(stringcase_t), stringcase_cmp );
 
@@ -64,9 +63,11 @@ void execute(char *cmd) {
 command(notfound) {
   printf("not found: %s", argv[0]);
 }
+
 command(quit) {
   exit(EXIT_SUCCESS);
 }
+
 command(run) {
   printf("run:");
   for (int i = 1; i <= argc; i++) {

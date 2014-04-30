@@ -1,17 +1,17 @@
 include_directories(${airvent_SOURCE_DIR}/include)
 
 add_executable(ventd ventd.c commands.c control.c spawn.c)
-find_package (argp REQUIRED)
+find_package(argp REQUIRED)
 
-if (ARGP_FOUND)
+if(ARGP_FOUND)
   include_directories(${ARGP_INCLUDE_DIRS})
-  target_link_libraries (ventd ${ARGP_LIBRARIES})
+  target_link_libraries(ventd ${ARGP_LIBRARIES})
 endif(ARGP_FOUND)
 
-target_link_libraries (ventd dl)
+target_link_libraries(ventd dl)
 
-configure_file ("ventctl.in" "${PROJECT_BINARY_DIR}/ventctl")
-configure_file ("configure.h.in" "${PROJECT_BINARY_DIR}/configure.h")
+configure_file("ventctl.in" "${PROJECT_BINARY_DIR}/ventctl")
+configure_file("configure.h.in" "${PROJECT_BINARY_DIR}/configure.h")
 
 include_directories("${PROJECT_BINARY_DIR}")
 
