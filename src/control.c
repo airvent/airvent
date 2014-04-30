@@ -16,6 +16,13 @@ int stringcase_cmp(const void *lhs, const void *rhs ) {
   );
 }
 
+/**
+ * @brief Switch on a string (Case-Insensitive)
+ * @param token String on which to switch
+ * @param cases Array of stringcase_t structures containing callbacs
+ * @param case_count    Number of cases on which to switch
+ * @return A function pointer to the callback for the specified case.
+ */
 void (*string_switch( char* token, stringcase_t *cases, size_t case_count ))(int argc, char **argv) {
   qsort(cases, case_count, sizeof(stringcase_t), stringcase_cmp );
 
@@ -30,6 +37,10 @@ void (*string_switch( char* token, stringcase_t *cases, size_t case_count ))(int
   return notfound;
 }
 
+/**
+ * @brief execute a command
+ * @param cmd Null terminated string.
+ */
 void execute(char *cmd) {
   char ** argv  = NULL;
   char *  p    = strtok (cmd, " ");
@@ -59,15 +70,27 @@ void execute(char *cmd) {
   free (argv);
 }
 
-/* Utility commands */
+/**
+ * @defgroup commands Utility commands
+ * @{
+ */
+/**
+ * @brief if the specified command was not found, return a pointer to this function.
+ */
 command(notfound) {
   printf("not found: %s", argv[0]);
 }
 
+/**
+ * @brief exit command handler.
+ */
 command(quit) {
   exit(EXIT_SUCCESS);
 }
 
+/**
+ * @brief run command handler, for debugging purposes.
+ */
 command(run) {
   printf("run:");
   for (int i = 1; i <= argc; i++) {
@@ -77,6 +100,14 @@ command(run) {
   string_switch(argv[1], commands, command_count)(argc-1, &(argv[1]) );
 }
 
+/** @} */
+
+/**
+ * @brief   continuously read on the control file descriptor, and execute
+ *          commands received.
+ * @param   ctrl_fd
+ * @return
+ */
 int command_loop( int ctrl_fd ) {
   // Wait for commands on the control fifo
   while(1) {

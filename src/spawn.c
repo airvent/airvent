@@ -16,6 +16,21 @@
 
 children_t processes;
 
+/**
+ * @defgroup spawn Process spawner
+ * @ingroup commands
+ * @{
+ */
+
+/**
+ * @defgroup children-management process child list management
+ * @{
+ */
+
+/**
+ * @brief Print a list of children pids
+ * @param list
+ */
 void print_children(children_t *list) {
   printf("%p=[", list);
   for (int i = 0; i < list->count; i++) {
@@ -24,6 +39,11 @@ void print_children(children_t *list) {
   printf(" ]\n");
 }
 
+/**
+ * @brief Insert a child into the list of children.
+ * @param list
+ * @param child
+ */
 void insert_child(children_t *list, child_t child) {
   if(!list->children) {
     assert(list->count == 0);
@@ -45,6 +65,12 @@ int child_compare( void const * lhs, void const * rhs ) {
   return 0;  /* left == right */
 }
 
+/**
+ * @brief Lookup a child in a list by pid
+ * @param list
+ * @param pid
+ * @return a pointer to the child
+ */
 child_t* lookup_child(children_t *list, pid_t pid) {
   qsort(list->children, list->count, sizeof(child_t), child_compare);
   child_t key;
@@ -53,6 +79,11 @@ child_t* lookup_child(children_t *list, pid_t pid) {
   return child;
 }
 
+/**
+ * @brief Remove a child in the list by pid
+ * @param list
+ * @param pid
+ */
 void remove_child(children_t *list, pid_t pid) {
   child_t *child = lookup_child(list, pid);
   memset(child, 0, sizeof(child_t));
@@ -64,6 +95,8 @@ void remove_child(children_t *list, pid_t pid) {
   free(list->children);
   list->children = new_list;
 }
+
+/** @} */
 
 struct spawn_arguments {
   char *entry;
@@ -95,6 +128,11 @@ int spawn_option_parse(int key, char *arg, struct argp_state *state) {
   return 0;
 }
 
+/**
+ * @brief sig_chld
+ * @param signo
+ * Child signal handler.
+ */
 void sig_chld(int signo) {
   int status, child_val;
   pid_t pid = waitpid(-1, &status, WNOHANG) ;
@@ -117,6 +155,16 @@ void sig_chld(int signo) {
 #define READ 0
 #define WRITE 1
 
+/**
+ * @brief fork_process
+ * @param entry The entry function of the process to fork off.
+ * @param argc
+ * @param argv
+ * @param list The process list to insert into
+ * @return the PID of the forked process
+ * Fork off a process running the specified function, setting up pipes for
+ * stdin, stdout and stderr. Also inserts the details into the children list.
+ */
 pid_t fork_process(int (*entry)(int argc, char **argv), int argc, char **argv, children_t list) {
   /* Setup signal handler for when the child exits */
   signal(SIGCHLD, sig_chld);
@@ -170,6 +218,13 @@ pid_t fork_process(int (*entry)(int argc, char **argv), int argc, char **argv, c
   return pid;
 }
 
+/**
+ * @brief fork off a process running the entry parameter from a specific shared
+ *        object.
+ * @param argv[1] the path to a shared object to fork off.
+ * @param -e the symbol name of the entry function in the specified object
+ * @param argv the rest of the options are passed onto the entry function.
+ */
 command(spawn) {
   /* Option Parsing */
   struct spawn_arguments arguments;
@@ -214,3 +269,5 @@ command(spawn) {
       }
   }
 }
+
+ /** @} */

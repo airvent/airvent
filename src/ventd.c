@@ -19,11 +19,17 @@
 
 #define PROG_NAME "airvent"
 
-
 char *instance_name=PROG_NAME;
 char *pipe_path;
 bool ctrl_stdin = false;
 
+/**
+ * @brief argp option callback.
+ * @param key
+ * @param arg
+ * @param state
+ * @return
+ */
 static int parse_opt (int key, char *arg, struct argp_state *state) {
   switch (key) {
     case 'i':
@@ -35,8 +41,14 @@ static int parse_opt (int key, char *arg, struct argp_state *state) {
       break;
   }
   return 0;
-} 
+}
 
+/**
+ * @brief Set up arg_p option parsing.
+ * @param argc
+ * @param argv
+ * @return
+ */
 static int parse_options(int argc, char **argv) {
   struct argp_option options[] = {
     {"instance-name", 'i', "NAME", 0, "Set instance name"},
@@ -48,6 +60,14 @@ static int parse_options(int argc, char **argv) {
   return argp_parse (&argp, argc, argv, 0, 0, 0);
 }
 
+/**
+ * @brief Reads on the specified file descriptor until a separator is found.
+ * @param fd    The file descriptor to read on
+ * @param len   The maximum length to read
+ * @param separator
+ * @return A pointer to the read command.
+ * @note Free the returned pointer after use.
+ */
 char * readcmd(int fd, size_t len, char separator) {
   int i=0;
   char c;
@@ -70,12 +90,19 @@ char * readcmd(int fd, size_t len, char separator) {
   return cmd;
 }
 
+/**
+ * @brief Do a clean shutdown, clean up stuff.
+ */
 void term() {
   syslog(LOG_NOTICE, "instance stopping: %s", instance_name);
   unlink(pipe_path);
   closelog();
 }
 
+/**
+ * @brief Termination signal handler.
+ * @param sig
+ */
 static void signal_handler(int sig) {
   printf("received signal: %s\n", strsignal(sig));
   switch(sig) {
