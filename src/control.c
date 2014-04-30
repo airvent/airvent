@@ -42,6 +42,8 @@ void (*string_switch( char* token, stringcase_t *cases, size_t case_count ))(int
  * @param cmd Null terminated string.
  */
 void execute(char *cmd) {
+  if(!strlen(cmd)) return;
+
   char ** argv  = NULL;
   char *  p    = strtok (cmd, " ");
   int argc = 0, i;
@@ -112,7 +114,7 @@ int command_loop( int ctrl_fd ) {
   // Wait for commands on the control fifo
   while(1) {
     char *cmd = readcmd(ctrl_fd, 255, '\n');
-    if(strlen(cmd)) execute(cmd);
+    execute(cmd);
     free(cmd);
   }
 }
