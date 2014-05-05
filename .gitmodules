@@ -1,3 +1,6 @@
 [submodule "lib/dht"]
 	path = lib/dht
 	url = https://github.com/jech/dht.git
+[submodule "lib/czmq"]
+	path = lib/czmq
+	url = git://github.com/zeromq/czmq
