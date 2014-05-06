@@ -21,7 +21,7 @@ if(BUILD_ZEROMQ)
 endif()
 
 if(BUILD_CZMQ)
-  set(CZMQ_SEARCH_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/lib/include/)
+  set(CZMQ_SEARCH_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/lib/czmq/include/)
   set(CZMQ_SEARCH_LIBS ${CMAKE_CURRENT_BINARY_DIR}/lib/czmq/)
 endif()
 
