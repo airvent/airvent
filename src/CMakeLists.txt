@@ -2,6 +2,8 @@ include_directories(include)
 include_directories(${airvent_SOURCE_DIR}/include)
 include_directories(${airvent_BINARY_DIR}/include)
 
+set(CMAKE_C_FLAGS "-std=c99")
+
 add_executable(ventd ventd.c commands.c control.c spawn.c)
 find_package(argp REQUIRED)
 

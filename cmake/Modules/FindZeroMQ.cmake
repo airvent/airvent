@@ -1,17 +1,23 @@
-include(FindPkgConfig)
-PKG_CHECK_MODULES(PC_ZEROMQ "libzmq")
+if (BUILD_ZEROMQ)
+  message(STATUS "looking for zeromq in ${ZEROMQ_SEARCH_INCLUDES}; ${ZEROMQ_SEARCH_LIBS}")
+  set(ZEROMQ_INCLUDE_DIRS ${ZEROMQ_SEARCH_INCLUDES})
+  set(ZEROMQ_LIBRARIES ${ZEROMQ_SEARCH_LIBS}/libzmq.so)
 
-find_path(
+else ()
+  include(FindPkgConfig)
+  PKG_CHECK_MODULES(PC_ZEROMQ "libzmq")
+
+  find_path(
     ZEROMQ_INCLUDE_DIRS
-    NAMES zmq.h
+    NAMES zmq.h zmq_utils.h
     HINTS ${PC_ZEROMQ_INCLUDE_DIRS}
-)
-
-find_library(
+  )
+  find_library(
     ZEROMQ_LIBRARIES
     NAMES zmq
     HINTS ${PC_ZEROMQ_LIBRARY_DIRS}
-)
+  )
+endif ()
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(ZEROMQ DEFAULT_MSG ZEROMQ_LIBRARIES ZEROMQ_INCLUDE_DIRS)
